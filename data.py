@@ -39,6 +39,9 @@ def download_data(url: str, name: str) -> None:
 
 
 def _fft_amp_channel(img: Image.Image, eps: float = 1e-8) -> np.ndarray:
+    """
+    Gets rid of near-zero frequencies using FFT
+    """
     x = np.array(img.convert("L"), dtype=np.float32) / 255.0
     fft = np.fft.fftshift(np.fft.fft2(x))
     h, w = fft.shape
@@ -49,6 +52,9 @@ def _fft_amp_channel(img: Image.Image, eps: float = 1e-8) -> np.ndarray:
 
 
 def build_transforms(img_size: int = 224, train: bool = True) -> T.Compose:
+    """
+    Sets augmentations for train and val/test parts
+    """
     if train:
         aug = [
             T.RandomResizedCrop((img_size, img_size), scale=(0.9, 1.0), ratio=(0.9, 1.1)),
@@ -81,6 +87,11 @@ def _balanced_sampler(subset: Subset, type_idx_full: List[int]) -> WeightedRando
 
 
 class FaceDeepfakeDataset(Dataset):
+    """
+    Dataset with crops of faces.
+    Returns RGB image and its gray scaled analogue after filtering near-zero frequencies
+    Additionally, returns labels if `is_test=False`
+    """
     def __init__(self,
                  csv_file: Union[str, os.PathLike],
                  root_dir: Union[str, os.PathLike] = "",
@@ -133,7 +144,10 @@ def build_dataloaders(csv_file_train: Union[str, os.PathLike],
                       batch_size: int = 32,
                       val_frac: float = 0.2,
                       seed: int = 42) -> Tuple[DataLoader, DataLoader, DataLoader]:
-
+    """
+    Simply creates 3 Dataloaders (Train/Val/Test)
+    For train dataloader uses balanced sampler with weights defined by `fake_type` column of df
+    """
     full_ds = FaceDeepfakeDataset(csv_file=csv_file_train,
                                   root_dir=root_dir_train,
                                   img_size=img_size,
@@ -155,6 +169,7 @@ def build_dataloaders(csv_file_train: Union[str, os.PathLike],
     train_loader = DataLoader(train_set,
                               batch_size=batch_size,
                               sampler=sampler)
+    
     val_loader = DataLoader(val_set,
                             batch_size=batch_size,
                             shuffle=False)

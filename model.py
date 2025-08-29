@@ -10,8 +10,9 @@ from torchmetrics.classification import AUROC, F1Score
 
 class Backbone(nn.Module):
     """
-    RGB branch → Swin‑Tiny,
-    FFT branch → EfficientNet‑B0.
+    RGB branch → Swin‑Tiny
+    FFT branch → EfficientNet‑B0
+    Both branches' predictions are then concatenated and passed to classification heads
     """
     def __init__(self, num_types: int) -> None:
         super().__init__()
@@ -64,6 +65,10 @@ class Backbone(nn.Module):
 
 
 class LitDeepfakeDetector(pl.LightningModule):
+    """
+    Pytorch-Lightning module for the deepfake classification task
+    `num_types` is an argument that defines number of different deepfake generators in the given dataset
+    """
     def __init__(self,
                  num_types: int = 7,
                  lr: float = 3e-4,
